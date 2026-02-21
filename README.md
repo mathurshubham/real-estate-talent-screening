@@ -1,16 +1,65 @@
-# React + Vite
+    # EstateAssess STAR 🛡️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+    A premium, AI-powered recruitment assessment platform designed specifically for high-stakes real estate candidate evaluation using the **STAR Methodology** (Skill, Training, Attitude, Results).
 
-Currently, two official plugins are available:
+    ![v3.4](https://img.shields.io/badge/TailwindCSS-v3.4-38B2AC)
+    ![Vite](https://img.shields.io/badge/Vite-7.3-646CFF)
+    ![Gemini](https://img.shields.io/badge/AI-Gemini_3.0_Flash-88ddff)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    ## 🌟 Key Features
 
-## React Compiler
+    -   **STAR Assessment Engine**: A mixed-modality interview flow supporting both numeric ratings and descriptive MCQs.
+    -   **Gemini 3.0 AI Generation**: Live, mid-interview question generation using context-aware reasoning for deep candidate insights.
+    -   **Kaggle HR Bank**: Built-in repository of 50+ real-world HR questions sourced from high-quality professional datasets.
+    -   **Visual Analytics**: Real-time Radar (Spider) chart integration to visualize candidate competency across all four STAR pillars.
+    -   **Premium UI**: Glassmorphism design system built with Navy, Gold, and Slate accents for a state-of-the-art panelist experience.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+    ## 🛠️ Technology Stack
 
-## Expanding the ESLint configuration
+    -   **Frontend**: React 19 + Vite
+    -   **Styling**: Tailwind CSS v3.4 + shadcn/ui + Framer Motion
+    -   **Data Science**: Python (KaggleHub) + Pandas
+    -   **AI**: Google Generative AI SDK (Gemini 3.0 Flash Preview)
+    -   **Charts**: Recharts
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+    ## 🚀 Getting Started
+
+    ### Prerequisites
+
+    -   Node.js (LTS)
+    -   Google AI Studio API Key ([Get one here](https://aistudio.google.com/))
+
+    ### Installation
+
+    1.  **Clone the repository**:
+        ```bash
+        git clone https://github.com/shubham/EstateAssess-STAR.git
+        cd EstateAssess-STAR
+        ```
+
+    2.  **Install dependencies**:
+        ```bash
+        npm install
+        ```
+
+    3.  **Environment Setup**:
+        Create a `.env` file in the root directory:
+        ```env
+        VITE_GEMINI_API_KEY=your_actual_key_here
+        ```
+
+    4.  **Run Development Server**:
+        ```bash
+        npm run dev
+        ```
+
+    ## 📁 Project Structure
+
+    -   `/docs/mvp/`: Contains the v4.0 implementation plan, walkthrough, and task logs.
+    -   `/src/components/`: Reusable UI components.
+    -   `/src/data/`: STAR pillar definitions and Kaggle dataset.
+    -   `fetch_kaggle_data.py`: Python utility for refreshing the HR question bank.
+
+    ## 📄 Documentation
+
+    For a detailed breakdown of the development journey and architectural decisions, see the [Walkthrough](docs/mvp/walkthrough.md).
