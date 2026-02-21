@@ -1,0 +1,1179 @@
+[
+  {
+    "id": "K1",
+    "text": "Tell me about a time you had to learn something completely new quickly.",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K2",
+    "text": "Describe a time you handled a difficult situation professionally.",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K3",
+    "text": "Where do you see yourself in 5 years?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K4",
+    "text": "Tell me about a conflict you had with a coworker and how you resolved it.",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K5",
+    "text": "What skills do you hope to develop in your next role?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K6",
+    "text": "What's the most significant change you've had to adapt to at work?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K7",
+    "text": "How does this role fit into your career path?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K8",
+    "text": "Tell me about a time you worked well within a team.",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K9",
+    "text": "What are your expectations from leadership in a company?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K10",
+    "text": "What motivates you to come to work every day?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K11",
+    "text": "Where do you see yourself in 5 years?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K12",
+    "text": "How do you motivate others in a leadership role?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K13",
+    "text": "What tools or methods help you stay organized?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K14",
+    "text": "How do you build trust with new teammates?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K15",
+    "text": "How do you build trust with new teammates?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K16",
+    "text": "Describe a time you felt out of place in a workplace culture.",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K17",
+    "text": "Do you prefer working independently or in teams? Why?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K18",
+    "text": "What motivates you to come to work every day?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K19",
+    "text": "Describe a time you led a project or team.",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K20",
+    "text": "How do you delegate tasks effectively?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K21",
+    "text": "Where do you see yourself in 5 years?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K22",
+    "text": "How do you align with our company values?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K23",
+    "text": "Tell me about a time you had to learn something completely new quickly.",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K24",
+    "text": "How do you delegate tasks effectively?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K25",
+    "text": "Where do you see yourself in 5 years?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K26",
+    "text": "Why do you want to work at our company?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K27",
+    "text": "What's the most significant change you've had to adapt to at work?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K28",
+    "text": "What makes a good leader in your opinion?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K29",
+    "text": "What are your long-term career aspirations?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K30",
+    "text": "Describe your ideal workday.",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K31",
+    "text": "What are your expectations from leadership in a company?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K32",
+    "text": "How do you deal with feedback that you disagree with?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K33",
+    "text": "How do you build trust with new teammates?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K34",
+    "text": "How do you delegate tasks effectively?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K35",
+    "text": "What role do you usually play in group settings?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K36",
+    "text": "What motivates you to come to work every day?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K37",
+    "text": "How do you align with our company values?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K38",
+    "text": "What are your long-term career aspirations?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K39",
+    "text": "How do you build trust with new teammates?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K40",
+    "text": "What would you do if you disagreed with your manager?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K41",
+    "text": "Tell me about a time you were highly motivated to achieve a goal.",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K42",
+    "text": "How do you contribute to a positive team environment?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K43",
+    "text": "What drives your passion for this field?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K44",
+    "text": "Do you prefer working independently or in teams? Why?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K45",
+    "text": "How do you react to sudden changes in priorities?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K46",
+    "text": "Why do you want to work at our company?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K47",
+    "text": "What tools or methods help you stay organized?",
+    "type": "mcq",
+    "pillar": "Attitude",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K48",
+    "text": "How does this role fit into your career path?",
+    "type": "mcq",
+    "pillar": "Results",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "K49",
+    "text": "How do you respond when a teammate isn't pulling their weight?",
+    "type": "rating",
+    "pillar": "Skill",
+    "category": "Kaggle HR",
+    "options": null
+  },
+  {
+    "id": "K50",
+    "text": "Do you prefer working independently or in teams? Why?",
+    "type": "mcq",
+    "pillar": "Training",
+    "category": "Kaggle HR",
+    "options": [
+      {
+        "label": "Exceeds Expectations",
+        "value": 5
+      },
+      {
+        "label": "Standard Professional",
+        "value": 4
+      },
+      {
+        "label": "Developing",
+        "value": 3
+      },
+      {
+        "label": "Needs Improvement",
+        "value": 2
+      },
+      {
+        "label": "Poor",
+        "value": 1
+      }
+    ]
+  }
+]
