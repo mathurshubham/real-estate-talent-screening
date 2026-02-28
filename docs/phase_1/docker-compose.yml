@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: estateassess_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:password@postgres:5432/estateassess
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+    container_name: estateassess_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  postgres:
+    extends:
+      file: devinfra/docker-compose.yml
+      service: postgres
+
+  redis:
+    extends:
+      file: devinfra/docker-compose.yml
+      service: redis
+
+volumes:
+  postgres_data:
+  redis_data:

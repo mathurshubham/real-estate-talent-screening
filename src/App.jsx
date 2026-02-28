@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   Users, Plus, LogIn, ChevronRight, ChevronLeft,
   Award, ClipboardCheck, Briefcase, CheckCircle2
@@ -14,6 +13,7 @@ import {
 import { QUESTION_LIBRARY, ROLE_TEMPLATES, ASSESSMENT_PILLARS } from './data/assessmentData';
 import KAGGLE_QUESTIONS from './data/kaggleQuestions.json';
 import { cn } from './lib/utils';
+import { assessmentApi } from './services/api';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -44,70 +44,45 @@ function App() {
     setNewCandidate({ name: '', role: 'specialist' });
   };
 
-  const startInterview = (candidate) => {
+  const startInterview = async (candidate) => {
     let questions = [];
-    if (useKaggle) {
-      // Pick 10 random questions from Kaggle library
-      questions = [...KAGGLE_QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 10);
-    } else {
-      const roleData = ROLE_TEMPLATES.find(r => r.id === candidate.role);
-      questions = roleData.groups.flatMap(group =>
-        QUESTION_LIBRARY[group].map(q => ({ ...q, pillar: group }))
-      );
-    }
+    try {
+      if (useKaggle) {
+        questions = await assessmentApi.getQuestions('kaggle');
+        // Pick 10 random
+        questions = questions.sort(() => 0.5 - Math.random()).slice(0, 10);
+      } else {
+        const roleData = ROLE_TEMPLATES.find(r => r.id === candidate.role);
+        // We still use local QUESTION_LIBRARY for now, but in future this would be an API call
+        questions = roleData.groups.flatMap(group =>
+          QUESTION_LIBRARY[group].map(q => ({ ...q, pillar: group }))
+        );
+      }
 
-    setActiveSession({ candidate, questions });
-    setCurrentQuestionIdx(0);
-    setScores({});
-    setView('interview');
+      setActiveSession({ candidate, questions });
+      setCurrentQuestionIdx(0);
+      setScores({});
+      setView('interview');
+    } catch (err) {
+      console.error("Failed to start interview:", err);
+    }
   };
 
   const generateAiQuestion = async () => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("Gemini API Key missing. Please ensure VITE_GEMINI_API_KEY is set in your .env file.");
-      return;
-    }
-
     setIsAiGenerating(true);
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-
-      // Integrating Gemini 3.0 Flash Preview for advanced reasoning
-      const model = genAI.getGenerativeModel({
-        model: "gemini-3-flash-preview",
-        // Note: Thinking level is handled by the model family by default
-      });
-
       const currentPillar = activeSession.questions[currentQuestionIdx].pillar;
       const candidateRole = ROLE_TEMPLATES.find(r => r.id === activeSession.candidate.role).name;
       const currentCategory = activeSession.questions[currentQuestionIdx].category;
       const currentQuestionText = activeSession.questions[currentQuestionIdx].text;
 
-      const prompt = `
-        As a professional Real Estate Recruitment Specialist, generate ONE highly relevant, probing interview question for the "${currentPillar}" category.
-        
-        CONTEXT:
-        - Candidate: ${activeSession.candidate.name}
-        - Role: ${candidateRole}
-        - Current Topic: ${currentCategory}
-        - Last Question Asked: "${currentQuestionText}"
-        
-        INSTRUCTIONS:
-        - The question should be sophisticated and specific to high-stakes real estate.
-        - Return ONLY the question text. 
-        - Do not include prefixes like "Question:" or any other commentary.
-      `;
+      const context = `Pillar: ${currentPillar}, Role: ${candidateRole}, Category: ${currentCategory}, Last: ${currentQuestionText}`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-
-      if (!text) throw new Error("Empty response from AI");
+      const { question } = await assessmentApi.generateQuestion(context);
 
       const aiQuestion = {
         id: `AI-${Date.now()}`,
-        text: `[Gemini Insight] ${text.trim()}`,
+        text: `[Gemini Insight] ${question.trim()}`,
         type: 'rating',
         pillar: currentPillar,
         category: 'AI Generated'
@@ -116,19 +91,31 @@ function App() {
       const newQuestions = [...activeSession.questions];
       newQuestions.splice(currentQuestionIdx + 1, 0, aiQuestion);
       setActiveSession({ ...activeSession, questions: newQuestions });
+
+      // Save session state to backend/redis
+      await assessmentApi.saveSession(activeSession.candidate.id, {
+        questions: newQuestions,
+        currentIdx: currentQuestionIdx,
+        scores
+      });
     } catch (error) {
-      console.error("Gemini AI Integration Error:", error);
-      // Fallback if the user's specific endpoint/key has issues with flash
-      if (error.message?.includes("404")) {
-        console.warn("Model not found. Ensure your API key has access to gemini-1.5-flash.");
-      }
+      console.error("AI Generation Error:", error);
     } finally {
       setIsAiGenerating(false);
     }
   };
 
-  const handleScore = (value) => {
-    setScores({ ...scores, [activeSession.questions[currentQuestionIdx].id]: value });
+  const handleScore = async (value) => {
+    const newScores = { ...scores, [activeSession.questions[currentQuestionIdx].id]: value };
+    setScores(newScores);
+
+    // Save to backend
+    await assessmentApi.saveSession(activeSession.candidate.id, {
+      questions: activeSession.questions,
+      currentIdx: currentQuestionIdx + 1,
+      scores: newScores
+    });
+
     if (currentQuestionIdx < activeSession.questions.length - 1) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {

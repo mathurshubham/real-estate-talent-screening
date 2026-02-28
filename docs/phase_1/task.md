@@ -1,0 +1,30 @@
+# Phase 1: Fullstack Architecture & Security Fixes
+
+- [x] 1. Infrastructure & Docker Setup
+  - [x] Create `/devinfra` with Docker Compose for Postgres and Redis
+  - [x] Dockerize Backend (Dockerfile)
+  - [x] Dockerize Frontend (Dockerfile)
+- [/] 2. Setup Python Backend
+  - [x] Initialize FastAPI project with `uv`
+  - [x] Configure CORS and environment variables
+  - [x] Create basic health check endpoint
+- [ ] 2. Migrate AI Logic to Backend
+  - [ ] Move `VITE_GEMINI_API_KEY` to backend `.env`
+  - [ ] Create POST endpoint for Gemini AI Generation
+  - [ ] Update frontend to call backend API instead of direct Gemini SDK
+- [ ] 3. Database Design & Setup (PostgreSQL)
+  - [ ] Design SQLAlchemy models (Users, Candidates, Question Bank, Assessments, Responses)
+  - [ ] Setup PostgreSQL connection in backend
+  - [ ] Run initial migrations for schemas
+- [ ] 4. Redis Caching Strategy
+  - [ ] Setup Redis connection
+  - [ ] Implement rate limiting on AI generation endpoint
+  - [ ] Cache standard question bank and Kaggle questions
+  - [ ] Implement session state caching
+- [ ] 5. Docker Compose Orchestration
+  - [ ] Create root `docker-compose.yml` merging app and infra
+  - [ ] Ensure networking and volume persistence
+- [ ] 6. Testing & Verification
+  - [ ] Verify frontend AI generation via backend
+  - [ ] Verify database persistence
+  - [ ] Verify Redis caching and rate limiting
