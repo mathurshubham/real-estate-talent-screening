@@ -38,6 +38,7 @@ class Assessment(Base):
     id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"))
     user_id = Column(Integer, ForeignKey("users.id")) # Interviewer
+    access_key = Column(String, unique=True, index=True) # For candidate access
     started_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     state = Column(JSON) # Current progress state
@@ -50,6 +51,7 @@ class Response(Base):
     id = Column(Integer, primary_key=True, index=True)
     assessment_id = Column(Integer, ForeignKey("assessments.id"))
     question_text = Column(String)
+    transcript = Column(String) # Candidate's written/recorded answer
     score = Column(Integer)
     ai_generated = Column(Integer, default=0) # Boolean 0/1 or actual bool
     ai_feedback = Column(String)

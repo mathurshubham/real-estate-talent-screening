@@ -1,14 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { toPng } from 'html-to-image';
 import {
   Users, Plus, LogIn, ChevronRight, ChevronLeft,
-  Award, ClipboardCheck, Briefcase, CheckCircle2
+  Award, ClipboardCheck, Briefcase, CheckCircle2, Sparkles
 } from 'lucide-react';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis,
   PolarRadiusAxis, ResponsiveContainer
 } from 'recharts';
 import {
-  Button, Card, CardHeader, CardTitle, CardContent, Input, Modal
+  Button, Card, CardHeader, CardTitle, CardContent, Input, Modal, Badge
 } from './components/ui';
 import { QUESTION_LIBRARY, ROLE_TEMPLATES, ASSESSMENT_PILLARS } from './data/assessmentData';
 import KAGGLE_QUESTIONS from './data/kaggleQuestions.json';
@@ -30,12 +31,128 @@ function App() {
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [scores, setScores] = useState({});
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [aiEvaluation, setAiEvaluation] = useState(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [candidateSession, setCandidateSession] = useState(null);
+  const [candidateAnswers, setCandidateAnswers] = useState({});
+  const [accessKey, setAccessKey] = useState('');
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [completedAssessments, setCompletedAssessments] = useState([]);
+  const [reviewAssessment, setReviewAssessment] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [remoteScores, setRemoteScores] = useState({}); // Stores other panelists' scores: {questionId: {panelistName: score, ...}}
+  const chartRef = useRef(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleLogin = (e) => {
     e.preventDefault();
     setUser({ name: 'Panelist Lead' });
     setView('dashboard');
   };
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('accessKey');
+    if (key) {
+      setAccessKey(key);
+      fetchCandidateAssessment(key);
+    }
+  }, []);
+
+  const fetchCandidateAssessment = async (key) => {
+    try {
+      const session = await assessmentApi.getCandidateAssessment(key);
+      setCandidateSession(session);
+      setView('candidate');
+      if (session.questions.length > 0) {
+        setTimeLeft(session.questions.length * 120); // 2 mins per question
+      }
+    } catch (error) {
+      console.error("Failed to fetch assessment:", error);
+    }
+  };
+
+  const fetchCompletedAssessmentList = async () => {
+    try {
+      const data = await assessmentApi.getCompletedAssessments();
+      setCompletedAssessments(data);
+    } catch (error) {
+      console.error("Failed to fetch completed list:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    if (view === 'dashboard') {
+      fetchCompletedAssessmentList();
+    }
+  }, [view]);
+
+  const handleReviewAssessment = async (sessionId) => {
+    try {
+      const session = await assessmentApi.getSession(sessionId);
+      setReviewAssessment(session);
+      setView('review');
+    } catch (error) {
+      console.error("Failed to fetch assessment for review:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    if (view === 'candidate' && timeLeft > 0) {
+      const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+      return () => clearInterval(timer);
+    } else if (timeLeft === 0 && view === 'candidate') {
+      submitCandidateAssessment();
+    }
+  }, [view, timeLeft]);
+
+  // WebSocket Connection for Panelists
+  React.useEffect(() => {
+    if ((view === 'interview' || view === 'summary') && activeSession && user) {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
+      const wsUrl = `${protocol}//${host}/api/v1/ws/session/${activeSession.candidate.id}`;
+
+      let ws;
+      let reconnectTimer;
+
+      const connect = () => {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log("Connected to session broadcast");
+          setSocket(ws);
+        };
+
+        ws.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          if (message.type === 'SCORE_UPDATE' && message.panelist !== user.name) {
+            setRemoteScores(prev => ({
+              ...prev,
+              [message.question_id]: {
+                ...(prev[message.question_id] || {}),
+                [message.panelist]: message.score
+              }
+            }));
+          } else if (message.type === 'PING') {
+            ws.send(JSON.stringify({ type: 'PONG' }));
+          }
+        };
+
+        ws.onclose = () => {
+          setSocket(null);
+          reconnectTimer = setTimeout(connect, 3000);
+        };
+      };
+
+      connect();
+      return () => {
+        if (ws) ws.close();
+        clearTimeout(reconnectTimer);
+      };
+    }
+  }, [view, activeSession, user]);
 
   const addCandidate = () => {
     if (!newCandidate.name) return;
@@ -105,9 +222,53 @@ function App() {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!chartRef.current) return;
+    setIsDownloading(true);
+    try {
+      // Capture the radar chart at 3x scale for crispness
+      const dataUrl = await toPng(chartRef.current, { backgroundColor: '#ffffff', pixelRatio: 3 });
+
+      // Save chart to backend
+      await assessmentApi.saveChart(activeSession.candidate.id, dataUrl);
+
+      // Trigger PDF download
+      await assessmentApi.downloadPdf(activeSession.candidate.id);
+    } catch (error) {
+      console.error("PDF Download failed:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleAiEvaluate = async () => {
+    if (!transcript) return;
+    setIsEvaluating(true);
+    try {
+      const context = activeSession.questions[currentQuestionIdx].text;
+      const result = await assessmentApi.evaluateAnswer(context, transcript);
+      setAiEvaluation(result);
+    } catch (error) {
+      console.error("Evaluation Error:", error);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
   const handleScore = async (value) => {
     const newScores = { ...scores, [activeSession.questions[currentQuestionIdx].id]: value };
     setScores(newScores);
+
+    // Broadcast score update
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: 'SCORE_UPDATE',
+        question_id: activeSession.questions[currentQuestionIdx].id,
+        score: value,
+        panelist: user.name,
+        timestamp: Date.now()
+      }));
+    }
 
     // Save to backend
     await assessmentApi.saveSession(activeSession.candidate.id, {
@@ -116,6 +277,10 @@ function App() {
       scores: newScores
     });
 
+    // Clear AI evaluation for next question
+    setTranscript('');
+    setAiEvaluation(null);
+
     if (currentQuestionIdx < activeSession.questions.length - 1) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
@@ -123,17 +288,39 @@ function App() {
     }
   };
 
+  const submitCandidateAssessment = async () => {
+    try {
+      const submissions = candidateSession.questions.map(q => ({
+        question_id: q.id,
+        question_text: q.text,
+        transcript: candidateAnswers[q.id] || ''
+      }));
+      await assessmentApi.submitCandidateAssessment(accessKey, submissions);
+      setView('candidate-thanks');
+    } catch (error) {
+      console.error("Submission failed:", error);
+    }
+  };
+
   const chartData = useMemo(() => {
     if (!activeSession) return [];
     return ASSESSMENT_PILLARS.map(pillar => {
       const pillarQuestions = activeSession.questions.filter(q => q.pillar === pillar);
-      const pillarScores = pillarQuestions.map(q => scores[q.id] || 0);
-      const average = pillarScores.length > 0
-        ? pillarScores.reduce((a, b) => a + b, 0) / pillarScores.length
+
+      // Aggregate local and remote scores
+      const averages = pillarQuestions.map(q => {
+        const localScore = scores[q.id] || 0;
+        const remoteScoresForQ = Object.values(remoteScores[q.id] || {});
+        const allScores = localScore > 0 ? [localScore, ...remoteScoresForQ] : remoteScoresForQ;
+        return allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
+      });
+
+      const average = averages.length > 0
+        ? averages.reduce((a, b) => a + b, 0) / averages.length
         : 0;
       return { subject: pillar, A: average, fullMark: 5 };
     });
-  }, [activeSession, scores]);
+  }, [activeSession, scores, remoteScores]);
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -177,6 +364,69 @@ function App() {
                 </div>
                 <Button type="submit" className="w-full">Sign In</Button>
               </form>
+              <div className="mt-6 pt-6 border-t text-center">
+                <p className="text-xs text-slate-400 mb-2">Candidate participating in a remote assessment?</p>
+                <Button variant="ghost" size="sm" className="text-xs text-[#1A365D] hover:underline" onClick={() => {
+                  const demoKey = "DEMO-123";
+                  // In a real app, this key would be generated per candidate
+                  window.history.pushState({}, '', `?accessKey=${demoKey}`);
+                  setAccessKey(demoKey);
+                  fetchCandidateAssessment(demoKey);
+                }}>Candidate Assessment Demo</Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {view === 'candidate' && candidateSession && (
+          <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-500">
+            <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div>
+                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Candidate Assessment</h2>
+                <p className="text-xl font-bold text-[#1A365D]">{candidateSession.candidate_name}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Time Remaining</span>
+                <span className={cn("text-2xl font-black tabular-nums", timeLeft < 60 ? "text-red-500 animate-pulse" : "text-[#1A365D]")}>
+                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {candidateSession.questions.map((q, idx) => (
+                <Card key={q.id} className="p-8 border-l-4 border-l-[#D4AF37]">
+                  <h3 className="text-sm font-bold text-[#D4AF37] mb-4 uppercase tracking-wider">Question {idx + 1}</h3>
+                  <p className="text-lg font-bold text-slate-800 mb-6">{q.text}</p>
+                  <textarea
+                    className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-[#1A365D] focus:ring-0 transition-all text-sm min-h-[150px]"
+                    placeholder="Write your STAR-based answer here..."
+                    value={candidateAnswers[q.id] || ''}
+                    onChange={(e) => setCandidateAnswers({ ...candidateAnswers, [q.id]: e.target.value })}
+                  />
+                </Card>
+              ))}
+              <div className="pt-8">
+                <Button className="w-full py-6 text-lg font-bold shadow-xl flex items-center justify-center gap-2" size="lg" onClick={submitCandidateAssessment}>
+                  Submit Assessment <CheckCircle2 className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'candidate-thanks' && (
+          <div className="flex h-[70vh] items-center justify-center text-center">
+            <Card className="max-w-md p-12 shadow-2xl space-y-6">
+              <div className="h-20 w-20 bg-[#48BB78]/10 text-[#48BB78] rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
+              <h2 className="text-3xl font-black text-[#1A365D]">Assessment Received</h2>
+              <p className="text-slate-500">Thank you for completing your screening. Our team will review your responses and get in touch shortly.</p>
+              <Button onClick={() => {
+                window.history.pushState({}, '', window.location.pathname);
+                setView('login');
+              }} variant="ghost" className="text-slate-400">Back to Home</Button>
             </Card>
           </div>
         )}
@@ -261,6 +511,89 @@ function App() {
                 </div>
               </div>
             </Modal>
+
+            {completedAssessments.length > 0 && (
+              <div className="mt-12 animate-in slide-in-from-bottom-4 duration-700">
+                <h2 className="text-xl font-black text-[#1A365D] mb-6 flex items-center gap-2">
+                  <ClipboardCheck className="h-6 w-6 text-[#D4AF37]" /> Completed Remote Assessments
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {completedAssessments.map(item => (
+                    <Card key={item.id} className="p-6 border-slate-100 hover:shadow-xl transition-all group">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="h-10 w-10 bg-[#1A365D]/5 text-[#1A365D] rounded-lg flex items-center justify-center font-bold">
+                          {item.candidate_name.charAt(0)}
+                        </div>
+                        <Badge variant="outline" className="bg-[#48BB78]/10 text-[#48BB78] border-[#48BB78]/20">
+                          {item.status === 'evaluated' ? 'Ready to Review' : 'Processing AI...'}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-slate-800">{item.candidate_name}</h3>
+                      <p className="text-xs text-slate-400 mb-6">Completed: {new Date(item.submitted_at).toLocaleDateString()}</p>
+                      <Button onClick={() => handleReviewAssessment(item.id)} className="w-full bg-[#1A365D]" size="sm">
+                        View Responses
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === 'review' && reviewAssessment && (
+          <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <Button variant="ghost" className="pl-0 text-slate-400 hover:text-[#1A365D]" onClick={() => setView('dashboard')}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Assessment Hub
+                </Button>
+                <h1 className="text-3xl font-black text-[#1A365D] mt-4">Review: {reviewAssessment.candidate.name}</h1>
+              </div>
+              <Badge className="bg-[#D4AF37] px-4 py-2 text-md">Remote Assessment</Badge>
+            </div>
+
+            <div className="space-y-6">
+              {reviewAssessment.candidate_answers && reviewAssessment.candidate_answers.map((ans, idx) => {
+                const aiEval = reviewAssessment.ai_evaluations?.[ans.question_id];
+                return (
+                  <Card key={ans.question_id || idx} className="p-8 border-l-4 border-[#1A365D] overflow-hidden">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Question {idx + 1}</span>
+                        <h3 className="text-xl font-bold text-slate-800">{ans.question_text}</h3>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 pt-8 border-t border-slate-50">
+                      <div className="bg-slate-50 p-6 rounded-2xl">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase mb-4">Candidate Answer</h4>
+                        <p className="text-slate-700 italic leading-relaxed">"{ans.transcript}"</p>
+                      </div>
+
+                      <div className="bg-[#1A365D]/5 p-6 rounded-2xl border border-[#1A365D]/10">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-xs font-bold text-[#1A365D] uppercase flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" /> AI Evaluation
+                          </h4>
+                          {aiEval && (
+                            <Badge className="bg-[#1A365D]">{aiEval.score} / 5</Badge>
+                          )}
+                        </div>
+                        {aiEval ? (
+                          <p className="text-slate-600 text-sm leading-relaxed">{aiEval.justification}</p>
+                        ) : (
+                          <div className="flex items-center gap-2 text-slate-400">
+                            <div className="h-4 w-4 border-2 border-[#1A365D] border-t-transparent rounded-full animate-spin" />
+                            Evaluating...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -310,22 +643,72 @@ function App() {
                   {activeSession.questions[currentQuestionIdx].text}
                 </h2>
 
-                <div className="pt-8 border-t">
+                <div className="pt-8 border-t space-y-6">
+                  <div>
+                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">Candidate Answer Transcript</p>
+                    <textarea
+                      className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-[#1A365D] focus:ring-0 transition-all text-sm min-h-[120px]"
+                      placeholder="Type the candidate's answer here for AI evaluation..."
+                      value={transcript}
+                      onChange={(e) => setTranscript(e.target.value)}
+                    />
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAiEvaluate}
+                        disabled={isEvaluating || !transcript}
+                        className="text-xs font-bold gap-2"
+                      >
+                        {isEvaluating ? 'Evaluating...' : '✨ Get AI Score Suggestion'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {aiEvaluation && (
+                    <div className="bg-[#1A365D]/5 border border-[#1A365D]/10 rounded-xl p-6 animate-in fade-in slide-in-from-top-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-bold text-[#1A365D] text-sm flex items-center gap-2">
+                          <Award className="h-4 w-4" /> AI Suggestion
+                        </h4>
+                        <div className="bg-[#1A365D] text-white px-3 py-1 rounded-full text-xs font-bold">
+                          Score: {aiEvaluation.score} / 5
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600 leading-relaxed italic">
+                        "{aiEvaluation.justification}"
+                      </p>
+                      <div className="mt-4 pt-4 border-t border-[#1A365D]/10 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        Based on STAR Methodology
+                      </div>
+                    </div>
+                  )}
+
                   {activeSession.questions[currentQuestionIdx].type === 'rating' ? (
                     <div className="space-y-6">
-                      <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">Numeric Rating (Standard Scale)</p>
+                      <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">Final Numeric Rating</p>
                       <div className="flex justify-between max-w-sm mx-auto">
                         {[1, 2, 3, 4, 5].map(val => (
                           <button
                             key={val}
                             onClick={() => handleScore(val)}
-                            className="group flex flex-col items-center gap-2"
+                            className={cn(
+                              "group flex flex-col items-center gap-2",
+                              aiEvaluation?.score === val && "scale-110"
+                            )}
                           >
-                            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full border-2 border-slate-200 flex items-center justify-center font-bold text-lg hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all">
+                            <div className={cn(
+                              "h-12 w-12 sm:h-14 sm:w-14 rounded-full border-2 flex items-center justify-center font-bold text-lg hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all",
+                              aiEvaluation?.score === val ? "border-[#D4AF37] bg-[#D4AF37]/10" : "border-slate-200"
+                            )}>
                               {val}
                             </div>
-                            <span className="text-[10px] uppercase text-slate-400 font-bold group-hover:text-[#D4AF37]">
+                            <span className={cn(
+                              "text-[10px] uppercase font-bold group-hover:text-[#D4AF37]",
+                              aiEvaluation?.score === val ? "text-[#D4AF37]" : "text-slate-400"
+                            )}>
                               {val === 1 ? 'Poor' : val === 5 ? 'Elite' : ''}
+                              {aiEvaluation?.score === val && ' (AI Rec)'}
                             </span>
                           </button>
                         ))}
@@ -339,10 +722,16 @@ function App() {
                           <button
                             key={i}
                             onClick={() => handleScore(opt.value)}
-                            className="flex items-center justify-between p-4 rounded-lg border-2 border-slate-100 hover:border-[#D4AF37] hover:bg-slate-50 transition-all text-left group"
+                            className={cn(
+                              "flex items-center justify-between p-4 rounded-lg border-2 hover:border-[#D4AF37] hover:bg-slate-50 transition-all text-left group",
+                              aiEvaluation?.score === opt.value ? "border-[#D4AF37] bg-slate-50" : "border-slate-100"
+                            )}
                           >
                             <span className="text-sm font-medium pr-4">{opt.label}</span>
-                            <div className="h-5 w-5 rounded-full border-2 border-slate-200 group-hover:border-[#D4AF37] shrink-0" />
+                            <div className={cn(
+                              "h-5 w-5 rounded-full border-2 group-hover:border-[#D4AF37] shrink-0",
+                              aiEvaluation?.score === opt.value ? "border-[#D4AF37] bg-[#D4AF37]" : "border-slate-200"
+                            )} />
                           </button>
                         ))}
                       </div>
@@ -377,7 +766,18 @@ function App() {
                   <h2 className="text-4xl font-black text-[#1A365D] tracking-tight">{activeSession.candidate.name}</h2>
                   <p className="text-slate-400 font-medium italic mt-1">STAR Method Breakdown</p>
                 </div>
-                <Button onClick={() => setView('dashboard')} variant="accent" size="lg">Return to Pipeline</Button>
+                <div className="flex gap-4">
+                  <Button
+                    onClick={handleDownloadPdf}
+                    variant="outline"
+                    size="lg"
+                    disabled={isDownloading}
+                    className="border-[#1A365D] text-[#1A365D]"
+                  >
+                    {isDownloading ? 'Capturing Report...' : 'Download PDF Report'}
+                  </Button>
+                  <Button onClick={() => setView('dashboard')} variant="accent" size="lg">Return to Pipeline</Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -403,7 +803,7 @@ function App() {
 
                 <div className="bg-slate-50/50 rounded-3xl p-4 sm:p-8 flex flex-col items-center">
                   <h3 className="text-sm font-bold text-[#1A365D] uppercase tracking-widest mb-8">Competency Spider Map</h3>
-                  <div className="w-full h-[300px] sm:h-[400px]">
+                  <div className="w-full h-[300px] sm:h-[400px]" ref={chartRef}>
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                         <PolarGrid stroke="#cbd5e1" />

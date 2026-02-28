@@ -14,15 +14,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./backend:/app
 
   frontend:
     build:
-      context: .
+      context: ./frontend
     container_name: estateassess_frontend
     ports:
       - "8080:80"
     depends_on:
       - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
   postgres:
     extends:

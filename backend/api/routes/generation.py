@@ -16,7 +16,7 @@ async def generate_question(request: Request, context: str):
     try:
         prompt = f"Given the following interview context: {context}, generate a relevant follow-up question following the STAR methodology."
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash-lite',
             contents=prompt,
         )
         return {"question": response.text}
