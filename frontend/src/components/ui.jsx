@@ -74,3 +74,16 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
         </div>
     );
 };
+// Badge
+export const Badge = ({ children, variant = 'primary', className }) => {
+    const variants = {
+        primary: "bg-[#1A365D] text-white",
+        success: "bg-green-100 text-green-700",
+        outline: "border border-slate-200 text-slate-600",
+    };
+    return (
+        <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold", variants[variant], className)}>
+            {children}
+        </span>
+    );
+};
