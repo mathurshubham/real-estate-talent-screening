@@ -2,64 +2,65 @@
 
 A premium, AI-powered recruitment assessment platform designed specifically for high-stakes real estate candidate evaluation using the **STAR Methodology** (Skill, Training, Attitude, Results).
 
-![v3.4](https://img.shields.io/badge/TailwindCSS-v3.4-38B2AC)
-![Vite](https://img.shields.io/badge/Vite-7.3-646CFF)
-![Gemini](https://img.shields.io/badge/AI-Gemini_3.0_Flash-88ddff)
-
 ## 🌟 Key Features
 
--   **STAR Assessment Engine**: A mixed-modality interview flow supporting both numeric ratings and descriptive MCQs.
--   **Gemini 3.0 AI Generation**: Live, mid-interview question generation using context-aware reasoning for deep candidate insights.
--   **Kaggle HR Bank**: Built-in repository of 50+ real-world HR questions sourced from high-quality professional datasets.
--   **Visual Analytics**: Real-time Radar (Spider) chart integration to visualize candidate competency across all four STAR pillars.
--   **Premium UI**: Glassmorphism design system built with Navy, Gold, and Slate accents for a state-of-the-art panelist experience.
+- **STAR Assessment Engine**: A mixed-modality interview flow supporting both numeric ratings and descriptive MCQs.
+- **AI-Driven Evaluation**: Dedicated backend using Gemini 2.5 Flash Lite for automated answer analysis and scoring.
+- **Asynchronous Candidate Portal**: Remote assessment platform for candidates to complete screenings independently.
+- **Multi-Panelist Collaboration**: Real-time session synchronization via WebSockets for collaborative evaluations.
+- **PDF Report Generation**: Professional, high-resolution competence reports with dynamic radar charts.
+- **Visual Analytics**: Real-time Radar (Spider) chart integration to visualize candidate competency across all four STAR pillars.
 
 ## 🛠️ Technology Stack
 
--   **Frontend**: React 19 + Vite
--   **Styling**: Tailwind CSS v3.4 + shadcn/ui + Framer Motion
--   **Data Science**: Python (KaggleHub) + Pandas
--   **AI**: Google Generative AI SDK (Gemini 3.0 Flash Preview)
--   **Charts**: Recharts
+- **Frontend**: React 19 + Vite + Recharts
+- **Backend**: FastAPI + Python 3.12 + ReportLab
+- **Database**: PostgreSQL
+- **Cache/Sync**: Redis
+- **AI**: Google Generative AI SDK (Gemini 2.5 Flash Lite)
+- **Infrastructure**: Docker Compose + Nginx
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
--   Node.js (LTS)
--   Google AI Studio API Key ([Get one here](https://aistudio.google.com/))
+- Docker and Docker Compose
+- Google AI Studio API Key ([Get one here](https://aistudio.google.com/))
 
-### Installation
+### Installation & Setup
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/mathurshubham/real-estate-talent-screening.git
-    cd real-estate-talent-screening
-    ```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/mathurshubham/real-estate-talent-screening.git
+   cd real-estate-talent-screening
+   ```
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+2. **Environment Setup**:
+   Copy `.env.example` to `.env` and fill in your Gemini API Key:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set VITE_GEMINI_API_KEY
+   ```
 
-3.  **Environment Setup**:
-    Create a `.env` file in the root directory:
-    ```env
-    VITE_GEMINI_API_KEY=your_actual_key_here
-    ```
+3. **Run with Docker Compose**:
+   ```bash
+   docker compose up --build -d
+   ```
 
-4.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
+### 🌐 Accessing the Application
+
+After starting the containers, the application is available at:
+- **Frontend**: [http://localhost:8200](http://localhost:8200)
+- **Backend API**: [http://localhost:8201/api/v1](http://localhost:8201/api/v1)
+- **Database (Postgres)**: `localhost:8202`
+- **Cache (Redis)**: `localhost:8203`
 
 ## 📁 Project Structure
 
--   `/docs/mvp/`: Contains the v4.0 implementation plan, walkthrough, and task logs.
--   `/src/components/`: Reusable UI components.
--   `/src/data/`: STAR pillar definitions and Kaggle dataset.
--   `fetch_kaggle_data.py`: Python utility for refreshing the HR question bank.
+- `/frontend`: React application (Vite-based).
+- `/backend`: FastAPI application and AI logic.
+- `/docs/phase_2`: Implementation plan, progress reports, and walkthroughs for the latest features.
 
 ## 📄 Documentation
 
-For a detailed breakdown of the development journey and architectural decisions, see the [Walkthrough](docs/mvp/walkthrough.md).
+For a detailed user guide and feature overview, see the [User Handbook](docs/guide.md).

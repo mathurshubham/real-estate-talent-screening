@@ -14,7 +14,7 @@ import {
 import { QUESTION_LIBRARY, ROLE_TEMPLATES, ASSESSMENT_PILLARS } from './data/assessmentData';
 import KAGGLE_QUESTIONS from './data/kaggleQuestions.json';
 import { cn } from './lib/utils';
-import { assessmentApi } from './services/api';
+import { assessmentApi, API_BASE_URL } from './services/api';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -110,9 +110,9 @@ function App() {
   // WebSocket Connection for Panelists
   React.useEffect(() => {
     if ((view === 'interview' || view === 'summary') && activeSession && user) {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
-      const wsUrl = `${protocol}//${host}/api/v1/ws/session/${activeSession.candidate.id}`;
+      const wsProtocol = API_BASE_URL.startsWith('https') ? 'wss:' : 'ws:';
+      const wsHost = API_BASE_URL.replace(/^https?:\/\//, '').split('/')[0];
+      const wsUrl = `${wsProtocol}//${wsHost}/api/v1/ws/session/${activeSession.candidate.id}`;
 
       let ws;
       let reconnectTimer;
