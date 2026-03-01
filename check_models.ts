@@ -24,11 +24,10 @@ async function check() {
         try {
             console.log(`Testing ${m}...`);
             const model = genAI.getGenerativeModel({ model: m });
-            // To truly check, we need to try a very small generation
             const result = await model.generateContent("hi");
             const response = await result.response;
             console.log(`${m} success: ${response.text()}`);
-        } catch (e) {
+        } catch (e: any) {
             console.log(`${m} fail: ${e.message}`);
         }
     }

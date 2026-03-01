@@ -1,8 +1,23 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+import { Question, SessionState, EvaluationResult, CandidateAssessment } from '../types';
 
-export const assessmentApi = {
+export const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+export interface AssessmentApi {
+    generateQuestion: (context: string) => Promise<{ question: string }>;
+    getQuestions: (source?: string) => Promise<Question[]>;
+    saveSession: (sessionId: string | number, state: Partial<SessionState>) => Promise<{ status: string }>;
+    getSession: (sessionId: string | number) => Promise<CandidateAssessment>;
+    evaluateAnswer: (questionContext: string, transcript: string) => Promise<EvaluationResult>;
+    getCandidateAssessment: (accessKey: string) => Promise<CandidateAssessment>;
+    submitCandidateAssessment: (accessKey: string, answers: any[]) => Promise<{ status: string }>;
+    getCompletedAssessments: () => Promise<CandidateAssessment[]>;
+    saveChart: (sessionId: string | number, imageData: string) => Promise<{ status: string }>;
+    downloadPdf: (sessionId: string | number) => void;
+}
+
+export const assessmentApi: AssessmentApi = {
     // AI Generation
-    generateQuestion: async (context) => {
+    generateQuestion: async (context: string) => {
         const response = await fetch(`${API_BASE_URL}/generate?context=${encodeURIComponent(context)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -12,14 +27,14 @@ export const assessmentApi = {
     },
 
     // Questions
-    getQuestions: async (source = 'standard') => {
+    getQuestions: async (source: string = 'standard') => {
         const response = await fetch(`${API_BASE_URL}/questions?source=${source}`);
         if (!response.ok) throw new Error('Failed to fetch questions');
         return response.json();
     },
 
     // Sessions
-    saveSession: async (sessionId, state) => {
+    saveSession: async (sessionId: string | number, state: Partial<SessionState>) => {
         const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -29,14 +44,14 @@ export const assessmentApi = {
         return response.json();
     },
 
-    getSession: async (sessionId) => {
+    getSession: async (sessionId: string | number) => {
         const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`);
         if (!response.ok) throw new Error('Failed to fetch session');
         return response.json();
     },
 
     // Evaluation
-    evaluateAnswer: async (questionContext, transcript) => {
+    evaluateAnswer: async (questionContext: string, transcript: string) => {
         const response = await fetch(`${API_BASE_URL}/evaluate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -50,13 +65,13 @@ export const assessmentApi = {
     },
 
     // Candidate Portal
-    getCandidateAssessment: async (accessKey) => {
+    getCandidateAssessment: async (accessKey: string) => {
         const response = await fetch(`${API_BASE_URL}/candidate/assessment/${accessKey}`);
         if (!response.ok) throw new Error('Failed to fetch candidate assessment');
         return response.json();
     },
 
-    submitCandidateAssessment: async (accessKey, answers) => {
+    submitCandidateAssessment: async (accessKey: string, answers: any[]) => {
         const response = await fetch(`${API_BASE_URL}/candidate/assessment/${accessKey}/submit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -72,7 +87,7 @@ export const assessmentApi = {
         return response.json();
     },
 
-    saveChart: async (sessionId, imageData) => {
+    saveChart: async (sessionId: string | number, imageData: string) => {
         const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/chart`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -82,7 +97,7 @@ export const assessmentApi = {
         return response.json();
     },
 
-    downloadPdf: async (sessionId) => {
+    downloadPdf: (sessionId: string | number) => {
         window.open(`${API_BASE_URL}/sessions/${sessionId}/pdf`, '_blank');
     }
 };
