@@ -1,4 +1,19 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { DashboardLayout } from './components/layout/DashboardLayout';
+import { Profile } from './pages/Profile';
+import { Admin } from './pages/Admin';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./components/ui/table";
+import { Skeleton } from "./components/ui/skeleton";
+
 import { toPng } from 'html-to-image';
 import {
     Users, Plus, LogIn, ChevronRight, ChevronLeft,
@@ -8,9 +23,11 @@ import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis,
     PolarRadiusAxis, ResponsiveContainer
 } from 'recharts';
-import {
-    Button, Card, CardHeader, CardTitle, CardContent, Input, Modal, Badge
-} from './components/ui';
+import { Modal } from './components/ui';
+import { Button } from './components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from './components/ui/card';
+import { Input } from './components/ui/input';
+import { Badge } from './components/ui/badge';
 import { QUESTION_LIBRARY, ROLE_TEMPLATES, ASSESSMENT_PILLARS } from './data/assessmentData';
 import KAGGLE_QUESTIONS from './data/kaggleQuestions.json';
 import { cn } from './lib/utils';
@@ -331,509 +348,405 @@ function App() {
         });
     }, [activeSession, scores, remoteScores]);
 
-    return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-md">
-                <div className="container flex h-16 items-center justify-between mx-auto px-4">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-[#1A365D] p-1.5 rounded-lg">
-                            <ClipboardCheck className="text-white h-5 w-5" />
-                        </div>
-                        <h1 className="text-xl font-bold tracking-tight text-[#1A365D]">
-                            Estate<span className="text-[#D4AF37]">Assess</span>
-                            <span className="ml-2 text-[10px] font-normal text-slate-400 uppercase tracking-widest">v3.0 STAR</span>
-                        </h1>
-                    </div>
-                    {user && (
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm font-medium text-slate-600 hidden sm:inline">User: {user.name}</span>
-                            <Button variant="ghost" size="sm" onClick={() => setView('login')}>Logout</Button>
-                        </div>
-                    )}
+
+    const DashboardContent = () => (
+        <div className="animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">Welcome back, {user?.name.split(' ')[0] || 'User'}</h2>
+                    <p className="text-muted-foreground mt-1">Here is what's happening today.</p>
                 </div>
-            </header>
+                <div className="flex items-center gap-4">
+                    <Button onClick={() => setIsAddModalOpen(true)} className="gap-2 bg-primary">
+                        <Plus className="h-4 w-4" /> New Assessment
+                    </Button>
+                </div>
+            </div>
 
-            <main className="container py-8 mx-auto px-4">
-                {view === 'login' && (
-                    <div className="flex h-[70vh] items-center justify-center">
-                        <Card className="w-full max-w-md p-8 shadow-2xl">
-                            <div className="text-center mb-8">
-                                < Award className="h-12 w-12 text-[#D4AF37] mx-auto mb-4" />
-                                <h2 className="text-2xl font-bold text-[#1A365D]">STAR Recruitment Access</h2>
-                                <p className="text-slate-500 text-sm mt-2">Professional Panelist Authentication</p>
-                            </div>
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Email</label>
-                                    <Input type="email" placeholder="panelist@realestate.com" required />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Password</label>
-                                    <Input type="password" placeholder="••••••••" required />
-                                </div>
-                                <Button type="submit" className="w-full">Sign In</Button>
-                            </form>
-                            <div className="mt-6 pt-6 border-t text-center">
-                                <p className="text-xs text-slate-400 mb-2">Candidate participating in a remote assessment?</p>
-                                <Button variant="ghost" size="sm" className="text-xs text-[#1A365D] hover:underline" onClick={() => {
-                                    const demoKey = "DEMO-123";
-                                    // In a real app, this key would be generated per candidate
-                                    window.history.pushState({}, '', `?accessKey=${demoKey}`);
-                                    setAccessKey(demoKey);
-                                    fetchCandidateAssessment(demoKey);
-                                }}>Candidate Assessment Demo</Button>
-                            </div>
-                        </Card>
-                    </div>
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Active Interviews</CardTitle>
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{candidates.filter(c => c.status === 'pending').length}</div>
+                        <p className="text-xs text-muted-foreground">+2 this week</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Candidates</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{candidates.length}</div>
+                        <p className="text-xs text-muted-foreground">+12 this month</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Evaluations Today</CardTitle>
+                        <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{completedAssessments.length}</div>
+                        <p className="text-xs text-muted-foreground">Stable trend</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Avg. Score</CardTitle>
+                        <Award className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">4.2</div>
+                        <p className="text-xs text-muted-foreground">+0.1 from last month</p>
+                    </CardContent>
+                </Card>
+            </div>
 
-                {view === 'candidate' && candidateSession && timeLeft !== null && (
-                    <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-500">
-                        <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <div>
-                                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Candidate Assessment</h2>
-                                <p className="text-xl font-bold text-[#1A365D]">{candidateSession.candidate_name}</p>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase block">Time Remaining</span>
-                                <span className={cn("text-2xl font-black tabular-nums", timeLeft < 60 ? "text-red-500 animate-pulse" : "text-[#1A365D]")}>
-                                    {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            {candidateSession.questions.map((q, idx) => (
-                                <Card key={q.id} className="p-8 border-l-4 border-l-[#D4AF37]">
-                                    <h3 className="text-sm font-bold text-[#D4AF37] mb-4 uppercase tracking-wider">Question {idx + 1}</h3>
-                                    <p className="text-lg font-bold text-slate-800 mb-6">{q.text}</p>
-                                    <textarea
-                                        className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-[#1A365D] focus:ring-0 transition-all text-sm min-h-[150px]"
-                                        placeholder="Write your STAR-based answer here..."
-                                        value={candidateAnswers[q.id] || ''}
-                                        onChange={(e) => setCandidateAnswers({ ...candidateAnswers, [q.id]: e.target.value })}
-                                    />
-                                </Card>
-                            ))}
-                            <div className="pt-8">
-                                <Button className="w-full py-6 text-lg font-bold shadow-xl flex items-center justify-center gap-2" size="lg" onClick={submitCandidateAssessment}>
-                                    Submit Assessment <CheckCircle2 className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {view === 'candidate-thanks' && (
-                    <div className="flex h-[70vh] items-center justify-center text-center">
-                        <Card className="max-w-md p-12 shadow-2xl space-y-6">
-                            <div className="h-20 w-20 bg-[#48BB78]/10 text-[#48BB78] rounded-full flex items-center justify-center mx-auto">
-                                <CheckCircle2 className="h-10 w-10" />
-                            </div>
-                            <h2 className="text-3xl font-black text-[#1A365D]">Assessment Received</h2>
-                            <p className="text-slate-500">Thank you for completing your screening. Our team will review your responses and get in touch shortly.</p>
-                            <Button onClick={() => {
-                                window.history.pushState({}, '', window.location.pathname);
-                                setView('login');
-                            }} variant="ghost" className="text-slate-400">Back to Home</Button>
-                        </Card>
-                    </div>
-                )}
-
-                {view === 'dashboard' && (
-                    <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-                            <div>
-                                <h2 className="text-3xl font-bold text-[#1A365D]">Assessment Hub</h2>
-                                <p className="text-slate-500 mt-1">STAR Methodology: Skill, Training, Attitude, Results</p>
-                                <div className="flex items-center gap-2 mt-4">
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Question Source:</label>
-                                    <button
-                                        onClick={() => setUseKaggle(false)}
-                                        className={cn("px-3 py-1 text-[10px] rounded-full font-bold transition-all", !useKaggle ? "bg-[#1A365D] text-white" : "bg-slate-200 text-slate-500")}
-                                    >Standard</button>
-                                    <button
-                                        onClick={() => setUseKaggle(true)}
-                                        className={cn("px-3 py-1 text-[10px] rounded-full font-bold transition-all", useKaggle ? "bg-[#D4AF37] text-white" : "bg-slate-200 text-slate-500")}
-                                    >Kaggle HR (50+)</button>
-                                </div>
-                            </div>
-                            <Button onClick={() => setIsAddModalOpen(true)} className="gap-2 shrink-0" variant="accent">
-                                <Plus className="h-4 w-4" /> Add New Candidate
-                            </Button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Role</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {candidates.map(candidate => (
-                                <Card key={candidate.id} className="group hover:border-[#1A365D] transition-all">
-                                    <CardContent className="p-6 pt-6">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-[#1A365D] font-bold text-lg group-hover:bg-[#1A365D] group-hover:text-white transition-colors">
+                                <TableRow key={candidate.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
                                                 {String(candidate.name).charAt(0)}
                                             </div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-slate-100 text-slate-500">
-                                                {candidate.role}
-                                            </span>
+                                            {candidate.name}
                                         </div>
-                                        <CardTitle className="mb-1">{candidate.name}</CardTitle>
-                                        <p className="text-xs text-slate-400 mb-6 flex items-center gap-1">
-                                            <Briefcase className="h-3 w-3" />
-                                            {ROLE_TEMPLATES.find(r => r.id === candidate.role)?.name || 'Unknown Role'}
-                                        </p>
+                                    </TableCell>
+                                    <TableCell>{ROLE_TEMPLATES.find(r => r.id === candidate.role)?.name || candidate.role}</TableCell>
+                                    <TableCell>{new Date().toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={candidate.status === 'evaluated' ? 'default' : 'secondary'}>
+                                            {candidate.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
                                         <Button
-                                            className="w-full group/btn"
-                                            variant="outline"
+                                            variant="ghost" size="sm"
                                             onClick={() => startInterview(candidate)}
                                         >
-                                            Start Assessment <ChevronRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                            Start <ChevronRight className="h-4 w-4 ml-1" />
                                         </Button>
-                                    </CardContent>
-                                </Card>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </div>
-
-                        <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Register Candidate">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Candidate Name</label>
-                                    <Input
-                                        placeholder="e.g. Robert Vance"
-                                        value={newCandidate.name}
-                                        onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Assessment Role</label>
-                                    <select
-                                        className="w-full h-10 px-3 py-2 rounded-md border border-input text-sm"
-                                        value={newCandidate.role}
-                                        onChange={(e) => setNewCandidate({ ...newCandidate, role: e.target.value })}
-                                    >
-                                        {ROLE_TEMPLATES.map(role => (
-                                            <option key={role.id} value={role.id}>{role.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="pt-4 flex gap-3">
-                                    <Button variant="outline" className="flex-1" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                                    <Button className="flex-1" onClick={addCandidate}>Add to List</Button>
-                                </div>
-                            </div>
-                        </Modal>
-
-                        {completedAssessments.length > 0 && (
-                            <div className="mt-12 animate-in slide-in-from-bottom-4 duration-700">
-                                <h2 className="text-xl font-black text-[#1A365D] mb-6 flex items-center gap-2">
-                                    <ClipboardCheck className="h-6 w-6 text-[#D4AF37]" /> Completed Remote Assessments
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {completedAssessments.map(item => (
-                                        <Card key={item.id} className="p-6 border-slate-100 hover:shadow-xl transition-all group">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div className="h-10 w-10 bg-[#1A365D]/5 text-[#1A365D] rounded-lg flex items-center justify-center font-bold">
-                                                    {item.candidate_name.charAt(0)}
-                                                </div>
-                                                <Badge variant="outline" className="bg-[#48BB78]/10 text-[#48BB78] border-[#48BB78]/20">
-                                                    {item.status === 'evaluated' ? 'Ready to Review' : 'Processing AI...'}
-                                                </Badge>
+                            {completedAssessments.map(item => (
+                                <TableRow key={"comp-"+item.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                                                {String(item.candidate_name).charAt(0)}
                                             </div>
-                                            <h3 className="font-bold text-slate-800">{item.candidate_name}</h3>
-                                            <p className="text-xs text-slate-400 mb-6">Completed: {new Date(item.submitted_at).toLocaleDateString()}</p>
-                                            <Button onClick={() => handleReviewAssessment(item.id)} className="w-full bg-[#1A365D]" size="sm">
-                                                View Responses
-                                            </Button>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                            {item.candidate_name}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>Completed Role</TableCell>
+                                    <TableCell>{new Date(item.submitted_at).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="border-green-500 text-green-600">Evaluated</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="sm" onClick={() => handleReviewAssessment(item.id)}>
+                                            Review
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Register Candidate">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold">Candidate Name</label>
+                        <Input
+                            placeholder="e.g. Robert Vance"
+                            value={newCandidate.name}
+                            onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+                        />
                     </div>
-                )}
-
-                {view === 'review' && reviewAssessment && (
-                    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <Button variant="ghost" className="pl-0 text-slate-400 hover:text-[#1A365D]" onClick={() => setView('dashboard')}>
-                                    <ChevronLeft className="mr-2 h-4 w-4" /> Assessment Hub
-                                </Button>
-                                <h1 className="text-3xl font-black text-[#1A365D] mt-4">Review: {reviewAssessment.candidate_name}</h1>
-                            </div>
-                            <Badge className="bg-[#D4AF37] px-4 py-2 text-md">Remote Assessment</Badge>
-                        </div>
-
-                        <div className="space-y-6">
-                            {reviewAssessment.candidate_answers && reviewAssessment.candidate_answers.map((ans, idx) => {
-                                const aiEval = reviewAssessment.ai_evaluations?.[ans.question_id];
-                                return (
-                                    <Card key={ans.question_id || idx} className="p-8 border-l-4 border-[#1A365D] overflow-hidden">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="space-y-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Question {idx + 1}</span>
-                                                <h3 className="text-xl font-bold text-slate-800">{ans.question_text}</h3>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 pt-8 border-t border-slate-50">
-                                            <div className="bg-slate-50 p-6 rounded-2xl">
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase mb-4">Candidate Answer</h4>
-                                                <p className="text-slate-700 italic leading-relaxed">"{ans.transcript}"</p>
-                                            </div>
-
-                                            <div className="bg-[#1A365D]/5 p-6 rounded-2xl border border-[#1A365D]/10">
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <h4 className="text-xs font-bold text-[#1A365D] uppercase flex items-center gap-1">
-                                                        <Sparkles className="h-3 w-3" /> AI Evaluation
-                                                    </h4>
-                                                    {aiEval && (
-                                                        <Badge className="bg-[#1A365D]">{aiEval.score} / 5</Badge>
-                                                    )}
-                                                </div>
-                                                {aiEval ? (
-                                                    <p className="text-slate-600 text-sm leading-relaxed">{aiEval.justification}</p>
-                                                ) : (
-                                                    <div className="flex items-center gap-2 text-slate-400">
-                                                        <div className="h-4 w-4 border-2 border-[#1A365D] border-t-transparent rounded-full animate-spin" />
-                                                        Evaluating...
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </Card>
-                                );
-                            })}
-                        </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold">Assessment Role</label>
+                        <select
+                            className="w-full h-10 px-3 py-2 rounded-md border border-input text-sm bg-background text-foreground"
+                            value={newCandidate.role}
+                            onChange={(e) => setNewCandidate({ ...newCandidate, role: e.target.value })}
+                        >
+                            {ROLE_TEMPLATES.map(role => (
+                                <option key={role.id} value={role.id}>{role.name}</option>
+                            ))}
+                        </select>
                     </div>
-                )}
-
-                {view === 'interview' && activeSession && (
-                    <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-500">
-                        <div className="mb-8 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]">
-                                        Assessing: {activeSession.candidate.name}
-                                    </h3>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[#1A365D] font-bold text-xs">PILLAR: {activeSession.questions[currentQuestionIdx].pillar}</span>
-                                    </div>
-                                </div>
-                                <div className="text-right flex items-center gap-4">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-[10px] font-bold text-[#D4AF37] hover:bg-[#D4AF37]/10"
-                                        onClick={generateAiQuestion}
-                                        disabled={isAiGenerating}
-                                    >
-                                        {isAiGenerating ? 'Generating...' : '✨ Smart Generate'}
-                                    </Button>
-                                    <span className="text-sm font-bold text-slate-400">
-                                        Step {currentQuestionIdx + 1} of {activeSession.questions.length}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="h-1.5 w-full bg-slate-200 rounded-full">
-                                <div
-                                    className="h-full bg-[#1A365D] transition-all duration-500"
-                                    style={{ width: `${((currentQuestionIdx + 1) / activeSession.questions.length) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        <Card className="border-t-4 border-t-[#D4AF37] shadow-xl overflow-hidden">
-                            <div className="p-8 sm:p-12 space-y-8">
-                                <div className="flex items-center gap-2">
-                                    <span className="bg-[#1A365D]/10 text-[#1A365D] text-[10px] font-bold px-2 py-1 rounded">
-                                        {activeSession.questions[currentQuestionIdx].category}
-                                    </span>
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight">
-                                    {activeSession.questions[currentQuestionIdx].text}
-                                </h2>
-
-                                <div className="pt-8 border-t space-y-6">
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">Candidate Answer Transcript</p>
-                                        <textarea
-                                            className="w-full p-4 rounded-xl border-2 border-slate-100 focus:border-[#1A365D] focus:ring-0 transition-all text-sm min-h-[120px]"
-                                            placeholder="Type the candidate's answer here for AI evaluation..."
-                                            value={transcript}
-                                            onChange={(e) => setTranscript(e.target.value)}
-                                        />
-                                        <div className="mt-3 flex justify-end">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleAiEvaluate}
-                                                disabled={isEvaluating || !transcript}
-                                                className="text-xs font-bold gap-2"
-                                            >
-                                                {isEvaluating ? 'Evaluating...' : '✨ Get AI Score Suggestion'}
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    {aiEvaluation && (
-                                        <div className="bg-[#1A365D]/5 border border-[#1A365D]/10 rounded-xl p-6 animate-in fade-in slide-in-from-top-4">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h4 className="font-bold text-[#1A365D] text-sm flex items-center gap-2">
-                                                    <Award className="h-4 w-4" /> AI Suggestion
-                                                </h4>
-                                                <div className="bg-[#1A365D] text-white px-3 py-1 rounded-full text-xs font-bold">
-                                                    Score: {aiEvaluation.score} / 5
-                                                </div>
-                                            </div>
-                                            <p className="text-sm text-slate-600 leading-relaxed italic">
-                                                "{aiEvaluation.justification || aiEvaluation.feedback}"
-                                            </p>
-                                            <div className="mt-4 pt-4 border-t border-[#1A365D]/10 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                Based on STAR Methodology
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {activeSession.questions[currentQuestionIdx].type === 'rating' ? (
-                                        <div className="space-y-6">
-                                            <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">Final Numeric Rating</p>
-                                            <div className="flex justify-between max-w-sm mx-auto">
-                                                {[1, 2, 3, 4, 5].map(val => (
-                                                    <button
-                                                        key={val}
-                                                        onClick={() => handleScore(val)}
-                                                        className={cn(
-                                                            "group flex flex-col items-center gap-2",
-                                                            aiEvaluation?.score === val && "scale-110"
-                                                        )}
-                                                    >
-                                                        <div className={cn(
-                                                            "h-12 w-12 sm:h-14 sm:w-14 rounded-full border-2 flex items-center justify-center font-bold text-lg hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all",
-                                                            aiEvaluation?.score === val ? "border-[#D4AF37] bg-[#D4AF37]/10" : "border-slate-200"
-                                                        )}>
-                                                            {val}
-                                                        </div>
-                                                        <span className={cn(
-                                                            "text-[10px] uppercase font-bold group-hover:text-[#D4AF37]",
-                                                            aiEvaluation?.score === val ? "text-[#D4AF37]" : "text-slate-400"
-                                                        )}>
-                                                            {val === 1 ? 'Poor' : val === 5 ? 'Elite' : ''}
-                                                            {aiEvaluation?.score === val && ' (AI Rec)'}
-                                                        </span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">Select the best description</p>
-                                            <div className="grid grid-cols-1 gap-3">
-                                                {activeSession.questions[currentQuestionIdx].options?.map((opt, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => handleScore(opt.value)}
-                                                        className={cn(
-                                                            "flex items-center justify-between p-4 rounded-lg border-2 hover:border-[#D4AF37] hover:bg-slate-50 transition-all text-left group",
-                                                            aiEvaluation?.score === opt.value ? "border-[#D4AF37] bg-slate-50" : "border-slate-100"
-                                                        )}
-                                                    >
-                                                        <span className="text-sm font-medium pr-4">{opt.label}</span>
-                                                        <div className={cn(
-                                                            "h-5 w-5 rounded-full border-2 group-hover:border-[#D4AF37] shrink-0",
-                                                            aiEvaluation?.score === opt.value ? "border-[#D4AF37] bg-[#D4AF37]" : "border-slate-200"
-                                                        )} />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </Card>
-
-                        <div className="mt-8 flex justify-between items-center">
-                            <Button
-                                variant="ghost"
-                                onClick={() => setCurrentQuestionIdx(Math.max(0, currentQuestionIdx - 1))}
-                                disabled={currentQuestionIdx === 0}
-                            >
-                                <ChevronLeft className="mr-2 h-4 w-4" /> Go Back
-                            </Button>
-                            <p className="text-xs text-slate-400 italic">Scores are saved automatically on selection</p>
-                        </div>
+                    <div className="pt-4 flex gap-3">
+                        <Button variant="outline" className="flex-1" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+                        <Button className="flex-1" onClick={addCandidate}>Add to List</Button>
                     </div>
-                )}
-
-                {view === 'summary' && activeSession && (
-                    <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-12 duration-700">
-                        <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-slate-100">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <CheckCircle2 className="text-[#48BB78] h-6 w-6" />
-                                        <span className="text-sm font-bold text-[#48BB78] uppercase tracking-widest">Assessment Complete</span>
-                                    </div>
-                                    <h2 className="text-4xl font-black text-[#1A365D] tracking-tight">{activeSession.candidate.name}</h2>
-                                    <p className="text-slate-400 font-medium italic mt-1">STAR Method Breakdown</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <Button
-                                        onClick={handleDownloadPdf}
-                                        variant="outline"
-                                        size="lg"
-                                        disabled={isDownloading}
-                                        className="border-[#1A365D] text-[#1A365D]"
-                                    >
-                                        {isDownloading ? 'Capturing Report...' : 'Download PDF Report'}
-                                    </Button>
-                                    <Button onClick={() => setView('dashboard')} variant="accent" size="lg">Return to Pipeline</Button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                                <div className="space-y-8">
-                                    {chartData.map(data => (
-                                        <div key={data.subject} className="group">
-                                            <div className="flex justify-between items-end mb-2">
-                                                <div>
-                                                    <span className="block text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest">Pillar</span>
-                                                    <span className="text-xl font-bold text-[#1A365D]">{data.subject}</span>
-                                                </div>
-                                                <span className="text-2xl font-black text-[#1A365D]">{data.A.toFixed(1)} <span className="text-xs text-slate-300">/ 5.0</span></span>
-                                            </div>
-                                            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-[#1A365D] to-[#2A4365] rounded-full transition-all duration-1000"
-                                                    style={{ width: `${(data.A / 5) * 100}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="bg-slate-50 rounded-3xl p-8 aspect-square flex items-center justify-center border border-slate-100" ref={chartRef}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                                            <PolarGrid stroke="#e2e8f0" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} />
-                                            <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
-                                            <Radar
-                                                name="Candidate"
-                                                dataKey="A"
-                                                stroke="#1A365D"
-                                                strokeWidth={3}
-                                                fill="#1A365D"
-                                                fillOpacity={0.4}
-                                            />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </main>
+                </div>
+            </Modal>
         </div>
+    );
+
+    const InterviewContent = () => {
+        if (!activeSession) return null;
+        return (
+            <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in duration-500">
+                <div className="w-full lg:w-64 shrink-0 space-y-6">
+                    <Card className="sticky top-6">
+                        <CardHeader className="pb-3 border-b">
+                            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Candidate Info</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-4">
+                            <div>
+                                <h3 className="font-bold text-lg">{activeSession.candidate.name}</h3>
+                                <p className="text-sm text-muted-foreground">{ROLE_TEMPLATES.find(r => r.id === activeSession.candidate.role)?.name}</p>
+                            </div>
+                            <div className="space-y-3 pt-4 border-t text-sm">
+                                <div>
+                                    <span className="text-muted-foreground block text-xs">Email</span>
+                                    <span>{activeSession.candidate.name.replace(' ', '.').toLowerCase()}@gmail.com</span>
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground block text-xs">Assessment ID</span>
+                                    <span className="font-mono text-xs">#{activeSession.candidate.id}-2024</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                    <Card className="shadow-lg min-h-[500px] flex flex-col">
+                        <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 pb-4">
+                            <div>
+                                <CardTitle className="text-lg">Active Interview</CardTitle>
+                                <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                                    <Badge variant="outline">{activeSession.questions[currentQuestionIdx].pillar}</Badge>
+                                    <span>Step {currentQuestionIdx + 1} of {activeSession.questions.length}</span>
+                                </div>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={generateAiQuestion}
+                                disabled={isAiGenerating}
+                                className="gap-2"
+                            >
+                                {isAiGenerating ? <Sparkles className="h-4 w-4 animate-spin text-primary" /> : <Sparkles className="h-4 w-4 text-primary" />}
+                                Smart Generate
+                            </Button>
+                        </CardHeader>
+
+                        <CardContent className="flex-1 pt-6 flex flex-col gap-6">
+                            <div className="space-y-4 flex-1">
+                                {isAiGenerating ? (
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-6 w-3/4" />
+                                        <Skeleton className="h-6 w-full" />
+                                        <Skeleton className="h-6 w-5/6" />
+                                    </div>
+                                ) : (
+                                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight flex items-start gap-3">
+                                        <div className="bg-primary/10 p-2 rounded-md shrink-0 mt-1">
+                                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                                        </div>
+                                        {activeSession.questions[currentQuestionIdx].text}
+                                    </h2>
+                                )}
+
+                                <div className="pt-6 flex-1 flex flex-col">
+                                    <label className="text-sm font-medium text-muted-foreground mb-2">Response Transcription</label>
+                                    <textarea
+                                        className="flex-1 w-full min-h-[160px] p-4 rounded-md border bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                                        placeholder="Write your response here..."
+                                        value={transcript}
+                                        onChange={(e) => setTranscript(e.target.value)}
+                                    />
+                                    <div className="mt-4 flex justify-end gap-3">
+                                        <Button
+                                            variant="secondary"
+                                            onClick={handleAiEvaluate}
+                                            disabled={isEvaluating || !transcript}
+                                            className="gap-2"
+                                        >
+                                            {isEvaluating ? 'Evaluating...' : 'Get AI Score Suggestion'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="w-full lg:w-72 shrink-0">
+                    <Card className="h-full bg-muted/20 border">
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Sparkles className="h-5 w-5" /> AI Evaluation
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {isEvaluating ? (
+                                <div className="space-y-3">
+                                    <Skeleton className="h-24 w-full" />
+                                    <Skeleton className="h-32 w-full" />
+                                </div>
+                            ) : aiEvaluation ? (
+                                <div className="space-y-4 animate-in fade-in">
+                                    <div className="bg-card border rounded-lg p-6 text-center shadow-sm">
+                                        <p className="text-sm text-muted-foreground mb-2">Suggested score:</p>
+                                        <div className="text-5xl font-bold tracking-tighter">{aiEvaluation.score}<span className="text-xl text-muted-foreground">/5</span></div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        {aiEvaluation.justification || aiEvaluation.feedback}
+                                    </p>
+                                    
+                                    <div className="space-y-3 pt-4 border-t">
+                                        <p className="text-sm font-medium">Final Rating</p>
+                                        <div className="flex justify-between">
+                                            {[1, 2, 3, 4, 5].map(val => (
+                                                <Button
+                                                    key={val}
+                                                    variant={aiEvaluation.score === val ? "default" : "outline"}
+                                                    size="icon"
+                                                    className="h-10 w-10 font-bold"
+                                                    onClick={() => handleScore(val)}
+                                                >
+                                                    {val}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-8">
+                                    AI evaluation feedback loop will generate suggested STAR feedback here.
+                                </p>
+                            )}
+
+                             {activeSession.questions[currentQuestionIdx].type !== 'rating' && !aiEvaluation && (
+                                <div className="space-y-3 mt-8 pt-6 border-t">
+                                    <p className="text-sm font-medium mb-3">Or manually select best match:</p>
+                                    {activeSession.questions[currentQuestionIdx].options?.map((opt, i) => (
+                                        <Button
+                                            key={i}
+                                            variant="outline"
+                                            className="w-full justify-start text-left h-auto py-3 px-4 font-normal"
+                                            onClick={() => handleScore(opt.value)}
+                                        >
+                                            {opt.label}
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
+
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
+    };
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col">
+              <div className="flex-1 flex items-center justify-center p-4">
+                <Card className="w-full max-w-md shadow-lg border">
+                    <CardHeader className="text-center pb-2">
+                        <div className="bg-primary/10 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <ClipboardCheck className="h-8 w-8 text-primary" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold">EstateAssess</CardTitle>
+                        <p className="text-muted-foreground text-sm mt-2">Sign in to the Panelist Portal</p>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleLogin} className="space-y-4 pt-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Email Address</label>
+                                <Input type="email" placeholder="panelist@estateassess.com" defaultValue="demo@estateassess.com" required className="bg-muted/50" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Password</label>
+                                <Input type="password" placeholder="••••••••" defaultValue="password" required className="bg-muted/50" />
+                            </div>
+                            <Button type="submit" className="w-full mt-2" size="lg">Sign In</Button>
+                        </form>
+                    </CardContent>
+                </Card>
+              </div>
+            </div>
+        );
+    }
+
+    return (
+        <BrowserRouter>
+            <DashboardLayout>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<DashboardContent />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/interview" element={view === 'interview' ? <InterviewContent /> : <Navigate to="/dashboard" replace />} />
+                    <Route path="/summary" element={
+                        <div className="p-8 bg-card border rounded-xl text-center shadow-sm">
+                            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                            <h2 className="text-3xl font-bold mb-2">Assessment Complete</h2>
+                            <p className="text-muted-foreground mb-8">The assessment data has been recorded successfully.</p>
+                            <Button onClick={() => setView('dashboard')}>Return to Dashboard</Button>
+                            <div className="hidden">
+                                <div ref={chartRef}></div>
+                            </div>
+                        </div>
+                    } />
+                    <Route path="*" element={<DashboardContent />} />
+                </Routes>
+                
+                <StateRouter view={view} setView={setView} />
+            </DashboardLayout>
+        </BrowserRouter>
     );
 }
 
+const StateRouter = ({ view, setView }: { view: string, setView: any }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (view === 'interview' && location.pathname !== '/interview') {
+            navigate('/interview');
+        } else if (view === 'summary' && location.pathname !== '/summary') {
+            navigate('/summary');
+        } else if (view === 'dashboard' && location.pathname !== '/dashboard' && location.pathname !== '/profile' && location.pathname !== '/admin') {
+            navigate('/dashboard');
+        }
+    }, [view]);
+
+    useEffect(() => {
+        if (location.pathname === '/profile' || location.pathname === '/admin') {
+            setView(location.pathname.substring(1));
+        }
+    }, [location.pathname]);
+
+    return null;
+}
 export default App;
