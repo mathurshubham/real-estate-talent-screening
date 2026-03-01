@@ -1,112 +1,109 @@
-# Phase 2 Feature Expansion Implementation Plan
+# Phase 2 Feature Expansion Implementation Plan (Completed)
 
-This document outlines the detailed plan to implement the Phase 2 Feature Expansion, including restructuring the project into a Turborepo, adding AI answer evaluation, creating a candidate portal, adding multi-panelist websocket support, and enabling PDF generation.
+This document outlines the finalized implementation of the Phase 2 Feature Expansion, including the Turborepo transition, AI-driven evaluation, asynchronous candidate portal, real-time collaboration, and PDF reporting.
 
 ## 1. Turborepo Migration & Directory Restructuring
 
-**Goal**: Organize the codebase into a monorepo using Turborepo to ease workspace management and builds.
+**Status**: Completed
+**Goal**: Organize the codebase into a monorepo using Turborepo for synchronized dev/build workflows.
 
-### Proposed Changes
+### Final Changes
 - **Root Directory**:
-  - `package.json`: Initialize a root `package.json` with npm workspaces (`"workspaces": ["frontend", "backend"]`) and add `turbo` as a dev dependency.
-  - `turbo.json`: Add Turborepo configuration to define the pipeline for `dev`, `build`, and `lint`.
-- **Frontend Move**:
-  - Move the following files and folders from the root to a new `frontend/` directory: `src/`, `public/`, `index.html`, `vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `eslint.config.js`, and `package.json`.
-  - Update `frontend/package.json` name to something like `"@estateassess/frontend"`.
-- **Backend Updates**:
-  - Add a `package.json` to `backend/` with a script to wrap Python execution (e.g. `"dev": "uv run uvicorn main:app --reload"`), allowing `turbo run dev` to orchestrate both.
+  - `package.json`: Configured with npm workspaces (`"workspaces": ["frontend", "backend"]`) and `turbo` as a core dependency.
+  - `turbo.json`: Defines the pipeline for `dev`, `build`, and `lint` across workspaces.
+- **Frontend Workspace**:
+  - Located in `frontend/`. Name: `"@estateassess/frontend"`.
+  - Service: Vite-based React application.
+- **Backend Workspace**:
+  - Located in `backend/`.
+  - Service: FastAPI-based Python application managed via `uv`.
 - **Docker Compose**:
-  - Update `docker-compose.yml` frontend build context from `.` to `./frontend`.
+  - `docker-compose.yml`: Updated to reflect the new workspace structure, supporting hot-reloading for both services.
 
 ---
 
 ## 2. AI-Driven Answer Evaluation
 
-**Goal**: Allow panelists to input candidate answers (transcripts) and get an AI-evaluated score (1-5) and justification based on the STAR framework.
+**Status**: Completed
+**Goal**: Provide AI-generated score suggestions (1-5) and justifications for candidate answers based on the STAR framework.
 
-### Proposed Changes
+### Final Changes
 - **Backend**:
-  - `backend/api/routes/evaluation.py` [NEW]: Create a new router for evaluation endpoints.
-  - `POST /api/evaluate/answer`: Accepts `question_context` and `candidate_transcript`.
-  - Utilize `google-genai` to prompt Gemini. The prompt will enforce the STAR (Situation, Task, Action, Result) framework. We will use Structured Outputs (Pydantic models) to ensure the AI always returns `score` (int 1-5) and `justification` (string).
+  - `backend/api/routes/evaluation.py`: Implemented `POST /api/v1/evaluate`.
+  - **Model**: `gemini-2.5-flash-lite` via `google-genai` SDK.
+  - **Logic**: Uses Structured Outputs (JSON) to return `score` and `justification`.
+  - **Rate Limiting**: Integrated `slowapi` to limit evaluation requests (5/minute).
 - **Frontend**:
-  - Add a text area in the active interview screen for panelists to type the candidate's transcript.
-  - Add a "Generate AI Evaluation" button that calls the `/api/evaluate/answer` endpoint and displays the suggested score and justification inline.
+  - `App.jsx`: Added a "Candidate Answer Transcript" textarea in the Interview view.
+  - "Get AI Score Suggestion" button triggers the evaluation and displays a sleek, branded suggestion box.
 
 ---
 
 ## 3. Asynchronous Candidate Portal
 
-**Goal**: A timed portal where candidates can take assessments synchronously without a panelist.
+**Status**: Completed
+**Goal**: A dedicated, timed interface for candidates to complete assessments remotely.
 
-### Proposed Changes
+### Final Changes
 - **Frontend**:
-  - `src/pages/CandidatePortal.jsx` [NEW]: A new route `/candidate/assessment/:sessionId`.
-  - A staging screen to verify identity/instructions.
-  - An active assessment screen that displays the pre-generated questions one by one with a countdown timer.
-  - Textareas for written answers. Upon submission, it calls the backend assessment submission API.
+  - Accessed via `?accessKey=DEMO-123` (simulated unique access).
+  - Countdown timer (2 minutes per question) with urgency animations (red/pulsing) when time is low.
+  - Sequential question rendering with STAR-based answer input.
 - **Backend**:
-  - Endpoints to fetch a session's questions for the candidate.
-  - `POST /api/sessions/{session_id}/submit`: Accepts all written answers, triggers async background tasks (using FastAPI `BackgroundTasks`) to pre-evaluate each answer using the AI evaluation tool, and stores the results and transcripts in the DB.
+  - `backend/api/routes/candidate.py`:
+    - `GET /api/v1/candidate/assessment/{access_key}`: Fetches questions.
+    - `POST /api/v1/candidate/assessment/{access_key}/submit`: Submits answers and triggers **background evaluation**.
+    - `GET /api/v1/candidate/assessments/completed`: Lists submissions for panelist review.
+  - **Process**: Submitted answers are queued for AI evaluation using FastAPI `BackgroundTasks`, updating the session state in Redis.
 
 ---
 
 ## 4. Multi-Panelist Collaboration (WebSockets)
 
-**Goal**: Allow multiple stakeholders to join the same assessment, score secretly, and average scores on the Radar chart.
+**Status**: Completed
+**Goal**: Synchronize scores across multiple panelists in real-time.
 
-### Proposed Changes
+### Final Changes
 - **Backend**:
-  - `backend/api/websockets.py` [NEW]: Implement a `ConnectionManager` class to handle active WebSocket connections locally.
-  - **Robustness**: Include a heartbeat (ping/pong) mechanism on the server and use it to prune stale connections.
-  - Since we have Redis, we will use Redis Pub/Sub to broadcast WebSocket messages across multiple FastAPI workers if needed.
-  - `WebSocket /api/ws/session/{session_id}`: Route for panelists to join a session.
-  - Event schemas: `SCORE_UPDATE`, `STATE_SYNC`.
+  - `backend/api/websockets.py`: Implemented `ConnectionManager` for managing WebSocket lifecycles.
+  - **Resilience**: PING/PONG heartbeats to detect and prune stale connections.
+  - **Sync**: Broadcasts `SCORE_UPDATE` events to all connected clients in the same session.
 - **Frontend**:
-  - Use native WebSocket or a library like `react-use-websocket` in the Interview session page.
-  - **Resilience**: Implement automatic reconnection logic to handle panelist dropout or tab switching.
-  - **Race Condition Handling**: Include a `timestamp` or `version` flag with `SCORE_UPDATE` events. The frontend and backend will use these to ensure the latest update is always honored, even if events arrive out of order.
-  - When Panelist A updates a score, broadcast the `SCORE_UPDATE`. The UI will obscure other panelists' scores during the interview, but the Dashboard/Summary page will receive the aggregated data.
-  - Update the Radar chart logic (which uses `recharts`) to display the average of all panelist scores.
+  - Reconnection logic (3-second retry) in `App.jsx`.
+  - Real-time aggregation: The Radar chart dynamically averages local and remote scores as they arrive.
+  - Dashboard: "Ready to Review" badges indicate completed remote assessments.
 
 ---
 
 ## 5. PDF Report Generation
 
-**Goal**: Generate a branded, downloadable PDF report.
+**Status**: Completed
+**Goal**: Professional PDF reports featuring candidate performance and the spider chart.
 
-### Proposed Changes
+### Final Changes
 - **Backend**:
-  - Add `reportlab` to `backend/pyproject.toml`.
-  - `GET /api/reports/{session_id}/pdf` [NEW]: Endpoint to generate PDF.
-  - The PDF will contain: The candidate's info, average score, the spider chart, questions, transcripts, and panelist notes.
-  - *Note on Chart*: Rendering the `recharts` radar chart in Python natively is difficult. To include the chart in the PDF, the frontend summary page will capture the `recharts` SVG or Canvas as a Base64 image, and POST it to the backend `POST /api/reports/{session_id}/save-chart`. The backend temporarily saves this image for the PDF generation.
+  - `backend/api/routes/reports.py`:
+    - `POST /api/v1/sessions/{session_id}/chart`: Temporarily stores chart image in Redis.
+    - `GET /api/v1/sessions/{session_id}/pdf`: Generates PDF via `reportlab`.
 - **Frontend**:
-  - Add "Download PDF" button to Summary Screen. Use `html-to-image` to extract the Radar Chart as a Base64 image.
-  - **Quality Optimization**: Configure `html-to-image` to scale the capture by 3x to ensure the chart looks crisp and professional in the final PDF report.
-  - POST the scaled image to the backend and then initiate the download.
+  - `handleDownloadPdf`: Uses `html-to-image` to capture the Radar Chart at **3x scale** for high resolution.
+  - Automated workflow: Uploads chart -> Triggers download -> Opens PDF in new tab.
 
 ---
 
 ## Verification & Testing Plan
 
 ### Automated Tests
-1. **Backend Tests** (`pytest`):
-   - Unit tests for Gemini prompt logic and evaluation schema parsing.
-   - Integration tests for candidate submission flow and async evaluation triggering.
-   - Mocked WebSocket client tests to verify broadcast and heartbeat logic.
-2. **Frontend Tests**:
-   - Component tests for the new AI evaluation UI.
-   - Integration tests for the candidate portal navigation and assessment timer.
-   - Reconnection logic tests for WebSockets.
+1. **Backend** (`pytest`):
+   - Integration tests in `backend/tests/test_api.py` verify the submission and evaluation flow.
+   - Mocked Redis and Gemini clients for deterministic CI/CD runs.
+2. **Frontend** (`vitest`):
+   - Unit tests for core UI components and utility functions.
+   - Verification of the scoring logic and chart data aggregation.
 
-### Browser Agent Verification
-The browser agent will be used to perform end-to-end validation of all new features:
-1. **Refactor Verification**: Verify `turbo run dev` starts the full stack correctly.
-2. **Evaluation Flow**: Type a transcript, trigger AI scoring, and verify the resulting UI update.
-3. **Assessment Flow**: Complete a candidate assessment end-to-end and see results appear in the panelist dashboard.
-4. **Collaboration Sync**: Use the agent to simulate multi-user behavior and verify WebSocket sync.
-5. **PDF Check**: Trigger a PDF generation and verify the file content (where possible).
+### Manual & Agent Verification
+1. **Turborepo**: Verified `turbo run dev` boots the full stack.
+2. **Candidate Flow**: Verified end-to-end flow from access key to "Thank You" screen.
+3. **Collaboration**: Verified WebSocket sync between simulated sessions.
+4. **PDF**: Verified download and inclusion of the 3x-scaled chart.
 
-### Manual Verification
-1. Click "Download PDF Report", verify the Spider chart, the average scores, and notes are cleanly formatted in the downloaded file.

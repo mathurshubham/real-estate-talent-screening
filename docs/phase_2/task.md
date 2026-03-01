@@ -20,7 +20,7 @@
 - [x] Build a timed candidate assessment interface displaying pre-generated questions.
 - [x] Implement form submission for text answers (or recorded media if supported).
 - [x] Add backend logic to asynchronously pre-evaluate submitted answers using the AI-evaluation endpoint.
-- [/] Create a summary view for panelists to review completed async assessments.
+- [x] Create a summary view for panelists to review completed async assessments.
 - [x] Write backend unit tests for assessment submission and evaluation triggers.
 - [x] Write frontend tests for the candidate assessment flow.
 - [x] Verify portal flow with Browser Agent.
@@ -32,8 +32,8 @@
 - [x] Implement real-time secret scoring broadcasting to updating the shared session state.
 - [x] Modify the comprehensive summary Radar chart to compute and display the average scores.
 - [x] Write backend integration tests for WebSocket score synchronization.
-- [/] Write frontend tests for real-time updates and reconnection.
-- [/] Verify multi-user sync with Browser Agent.
+- [x] Write frontend tests for real-time updates and reconnection.
+- [x] Verify multi-user sync with Browser Agent.
 
 ## 5. PDF Report Generation
 - [x] Add `reportlab` or `weasyprint` (or similar) to backend `pyproject.toml`.
@@ -45,9 +45,9 @@
 ## 6. Verification & Browser Testing
 - [x] Verify Turborepo starts frontend/backend correctly.
 - [x] Run all backend tests (`pytest`).
-- [/] Run all frontend tests (`vitest` or similar).
-- [/] Use Browser Agent to walk through:
+- [x] Run all frontend tests (`vitest` or similar).
+- [x] Use Browser Agent to walk through:
     - [x] New evaluation flow.
     - [x] Candidate portal assessment.
-    - [/] WebSocket sync between two "simulated" browser sessions.
-    - [/] PDF generation and download.
+    - [x] WebSocket sync between two "simulated" browser sessions.
+    - [x] PDF generation and download.
