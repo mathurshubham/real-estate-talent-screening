@@ -1,6 +1,8 @@
+import { Question, RoleTemplate } from '../types';
+
 export const ASSESSMENT_PILLARS = ['Skill', 'Training', 'Attitude', 'Results'];
 
-export const QUESTION_LIBRARY = {
+export const QUESTION_LIBRARY: Record<string, Question[]> = {
     Skill: [
         { id: 'S1', text: "Assess candidate's technical relevance to the real estate domain.", type: 'rating', category: "Relevance" },
         { id: 'S2', text: "Technical proficiency in CRM and market analysis tools.", type: 'rating', category: "Technical" },
@@ -93,7 +95,7 @@ export const QUESTION_LIBRARY = {
     ]
 };
 
-export const ROLE_TEMPLATES = [
+export const ROLE_TEMPLATES: RoleTemplate[] = [
     {
         id: 'specialist',
         name: 'Sales Specialist',
